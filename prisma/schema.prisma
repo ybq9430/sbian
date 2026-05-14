@@ -1,0 +1,414 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  passwordHash  String
+  role          String         @default("user")
+  avatar        String?
+  bio           String?
+  website       String?
+  xp            Int            @default(0)
+  level         Int            @default(1)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  products      Product[]
+  orders        Order[]
+  reviews       Review[]
+  wallet        Wallet?
+  affiliate     Affiliate?
+  followers     Follow[]       @relation("following")
+  following     Follow[]       @relation("follower")
+  badges        UserBadge[]
+  notifications Notification[]
+  discussions   Discussion[]
+  replies       Reply[]
+  storefronts   Storefront[]
+  teamMembers   TeamMember[]
+  apiKeys       ApiKey[]
+  webhookEndpoints WebhookEndpoint[]
+  subscriptions UserSubscription[]
+}
+
+model Product {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  price         Float
+  category      String
+  coverImage    String?
+  fileUrl       String?
+  licenseType   String?
+  status        String        @default("draft")
+  salesCount    Int           @default(0)
+  revenue       Float         @default(0)
+  rating        Float         @default(0)
+  tags          String        @default("")
+  aiGenerated   Boolean       @default(false)
+  conversionRate Float        @default(0)
+  viewCount     Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  sellerId      String
+  seller        User          @relation(fields: [sellerId], references: [id])
+  orders        OrderItem[]
+  reviews       Review[]
+  flashDeals    FlashDeal[]
+  bundleItems   BundleItem[]
+  discussions   Discussion[]
+  licenseKeys   LicenseKey[]
+  teamMembers   TeamMember[]
+  conversionEvents ConversionEvent[]
+  subscription    SubscriptionPlan?
+  abTests        ABTest[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  buyerId         String
+  buyer           User        @relation(fields: [buyerId], references: [id])
+  items           OrderItem[]
+  total           Float
+  discount        Float       @default(0)
+  status          String      @default("pending")
+  stripePaymentId String?
+  licenseKeys     LicenseKey[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  price     Float
+  quantity  Int     @default(1)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  balance   Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Affiliate {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  code            String   @unique
+  commission      Float    @default(0.1)
+  earnings        Float    @default(0)
+  clickCount      Int      @default(0)
+  conversionCount Int      @default(0)
+  createdAt       DateTime @default(now())
+}
+
+model FlashDeal {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  salePrice Float
+  maxSales  Int      @default(50)
+  soldCount Int      @default(0)
+  startsAt  DateTime
+  endsAt    DateTime
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("follower", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("following", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Badge {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String
+  icon        String
+  criteria    String
+  xpReward    Int        @default(0)
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
+
+model Bundle {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  discount    Float        @default(0)
+  sellerId    String
+  createdAt   DateTime     @default(now())
+  items       BundleItem[]
+}
+
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundleId  String
+  bundle    Bundle  @relation(fields: [bundleId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+// === NEW: Community Discussions ===
+model Discussion {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  replies   Reply[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reply {
+  id           String     @id @default(cuid())
+  body         String
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  discussionId String
+  discussion   Discussion @relation(fields: [discussionId], references: [id])
+  parentId     String?
+  parent       Reply?     @relation("ReplyToReply", fields: [parentId], references: [id])
+  children     Reply[]    @relation("ReplyToReply")
+  createdAt    DateTime   @default(now())
+}
+
+// === NEW: License Key System ===
+model LicenseKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  status    String   @default("available")
+  issuedAt  DateTime?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+// === NEW: White-Label Storefronts ===
+model Storefront {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  subdomain   String   @unique
+  title       String
+  description String?
+  logoUrl     String?
+  theme       String   @default("default")
+  customCSS   String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// === NEW: Team Collaboration ===
+model TeamMember {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  role      String   @default("editor")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// === NEW: Conversion Analytics ===
+model ConversionEvent {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String?
+  event     String
+  source    String?
+  value     Float?
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+// Legacy analytics models
+model ClickEvent {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String?
+  ip        String?
+  userAgent String?
+  referrer  String?
+  createdAt DateTime @default(now())
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  userId    String?
+  ip        String?
+  duration  Int?
+  createdAt DateTime @default(now())
+}
+
+// === v4: Developer Platform ===
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  key       String   @unique
+  scopes    String   @default("read")
+  rateLimit Int      @default(100)
+  lastUsed  DateTime?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model WebhookEndpoint {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  url       String
+  events    String         @default("sale,refund")
+  secret    String
+  active    Boolean        @default(true)
+  deliveries WebhookDelivery[]
+  createdAt DateTime       @default(now())
+}
+
+model WebhookDelivery {
+  id         String          @id @default(cuid())
+  endpointId String
+  endpoint   WebhookEndpoint @relation(fields: [endpointId], references: [id])
+  event      String
+  status     String
+  statusCode Int?
+  payload    String?
+  response   String?
+  createdAt  DateTime        @default(now())
+}
+
+// === v4: Subscription Products ===
+model SubscriptionPlan {
+  id            String            @id @default(cuid())
+  productId     String            @unique
+  product       Product           @relation(fields: [productId], references: [id])
+  interval      String            @default("month")
+  intervalCount Int               @default(1)
+  trialDays     Int               @default(0)
+  active        Boolean           @default(true)
+  subscriptions UserSubscription[]
+  createdAt     DateTime          @default(now())
+}
+
+model UserSubscription {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  planId      String
+  plan        SubscriptionPlan @relation(fields: [planId], references: [id])
+  status      String           @default("active")
+  currentStart DateTime
+  currentEnd   DateTime
+  canceledAt  DateTime?
+  createdAt   DateTime         @default(now())
+}
+
+// === v4: A/B Testing ===
+model ABTest {
+  id         String         @id @default(cuid())
+  productId  String
+  product    Product        @relation(fields: [productId], references: [id])
+  name       String
+  status     String         @default("draft")
+  traffic    Float          @default(0.5)
+  variants   ABTestVariant[]
+  createdAt  DateTime       @default(now())
+}
+
+model ABTestVariant {
+  id          String  @id @default(cuid())
+  testId      String
+  test        ABTest  @relation(fields: [testId], references: [id])
+  name        String
+  title       String?
+  description String?
+  price       Float?
+  coverImage  String?
+  impressions Int     @default(0)
+  conversions Int     @default(0)
+}
+
+// === v4: Customer CRM ===
+model CustomerSegment {
+  id        String   @id @default(cuid())
+  sellerId  String
+  name      String
+  criteria  String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model CustomerNote {
+  id        String   @id @default(cuid())
+  userId    String
+  sellerId  String
+  note      String
+  createdAt DateTime @default(now())
+}
