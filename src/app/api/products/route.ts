@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { withErrorHandler, validateBody, ok } from "@/lib/api-handler";
 import { requireAuth } from "@/lib/auth-helpers";
@@ -11,7 +12,7 @@ export const GET = withErrorHandler(async (req) => {
   const search = searchParams.get("search");
   const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "12")));
-  const where: any = { status: "published" };
+  const where: Prisma.ProductWhereInput = { status: "published" };
   if (category) where.category = category;
   if (search) where.title = { contains: search };
 

@@ -15,6 +15,8 @@ export const GET = withErrorHandler(async () => {
   return ok(orders);
 });
 
+const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE) || 0.1;
+
 export const POST = withErrorHandler(async (req) => {
   const user = await requireAuth();
   const { items } = validateBody(orderSchema, await req.json());
@@ -29,16 +31,30 @@ export const POST = withErrorHandler(async (req) => {
     include: { items: { include: { product: true } } },
   });
 
-  for (const item of items) {
-    await prisma.product.update({
-      where: { id: item.productId },
-      data: { salesCount: { increment: 1 }, revenue: { increment: item.price } },
-    });
-    await prisma.wallet.upsert({
-      where: { userId: user.id },
-      update: { balance: { increment: item.price * 0.9 } },
-      create: { userId: user.id, balance: item.price * 0.9 },
-    });
-  }
+  const products = await prisma.product.findMany({
+    where: { id: { in: items.map(i => i.productId) } },
+    select: { id: true, sellerId: true },
+  });
+  const sellerMap = new Map(products.map(p => [p.id, p.sellerId]));
+  const sellerShare = 1 - PLATFORM_FEE_RATE;
+
+  await prisma.$transaction([
+    ...items.map(i =>
+      prisma.product.update({
+        where: { id: i.productId },
+        data: { salesCount: { increment: 1 }, revenue: { increment: i.price } },
+      })
+    ),
+    ...items.map(i => {
+      const sellerId = sellerMap.get(i.productId);
+      if (!sellerId) return prisma.$executeRawUnsafe("SELECT 1");
+      const payout = i.price * sellerShare;
+      return prisma.wallet.upsert({
+        where: { userId: sellerId },
+        update: { balance: { increment: payout } },
+        create: { userId: sellerId, balance: payout },
+      });
+    }),
+  ]);
   return ok(order, 201);
 });

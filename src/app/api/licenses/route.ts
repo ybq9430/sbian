@@ -30,8 +30,14 @@ export const POST = withErrorHandler(async (req) => {
   const { productId, count } = validateBody(licenseGenSchema, await req.json());
   const product = await prisma.product.findFirst({ where: { id: productId, sellerId: user.id } });
   if (!product) return notFound("Product not found");
-  const keys = Array.from({ length: count || 1 }, () => ({ key: generateKey(), productId, status: "available" }));
-  await prisma.licenseKey.createMany({ data: keys });
-  const created = await prisma.licenseKey.findMany({ where: { productId }, orderBy: { createdAt: "desc" }, take: count || 1 });
+  const keys = Array.from({ length: count || 1 }, () => ({
+    key: generateKey(),
+    productId,
+    status: "available" as const,
+  }));
+  // Create keys individually within a transaction so we can return them directly
+  const created = await prisma.$transaction(
+    keys.map(k => prisma.licenseKey.create({ data: k }))
+  );
   return ok({ generated: created.length, keys: created });
 });

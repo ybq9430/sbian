@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { withErrorHandler, validateBody, ok } from "@/lib/api-handler";
 import { requireAuth, getSessionUser } from "@/lib/auth-helpers";
@@ -9,7 +10,7 @@ export const GET = withErrorHandler(async (req) => {
   const user = await requireAuth();
   const { searchParams } = new URL(req.url);
   const productId = searchParams.get("productId");
-  const where: any = productId ? { productId } : { product: { sellerId: user.id } };
+  const where: Prisma.ConversionEventWhereInput = productId ? { productId } : { product: { sellerId: user.id } };
 
   const [events, viewCount, orderCount] = await Promise.all([
     prisma.conversionEvent.findMany({ where, orderBy: { createdAt: "desc" }, take: 50 }),

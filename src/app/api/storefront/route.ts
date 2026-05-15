@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { withErrorHandler, validateBody, ok, badRequest, notFound } from "@/lib/api-handler";
 import { requireAuth, getSessionUser } from "@/lib/auth-helpers";
@@ -9,7 +10,7 @@ export const GET = withErrorHandler(async (req) => {
   const { searchParams } = new URL(req.url);
   const subdomain = searchParams.get("subdomain");
   const userId = searchParams.get("userId");
-  const where: any = { published: true };
+  const where: Prisma.StorefrontWhereInput = { published: true };
   if (subdomain) where.subdomain = subdomain;
   if (userId) where.userId = userId;
 

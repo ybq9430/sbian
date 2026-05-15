@@ -4,27 +4,34 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { formatCurrency } from "@/lib/utils";
+import { errorMessage, type AffiliateData } from "@/types/api";
 
 export default function AffiliatePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [affiliate, setAffiliate] = useState<any>(null);
+  const [affiliate, setAffiliate] = useState<AffiliateData | null>(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
     if (status === "authenticated") {
-      fetch("/api/affiliate").then(r => r.json()).then(setAffiliate);
+      fetch("/api/affiliate")
+        .then(r => { if (!r.ok) throw new Error(`Request failed: ${r.status}`); return r.json(); })
+        .then(setAffiliate)
+        .catch(err => setError(errorMessage(err)));
     }
   }, [status, router]);
 
   const refLink = `https://shelf.io/ref/${affiliate?.code}`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-8">Affiliate program</h1>
+        <h1 className="text-2xl font-bold mb-8 dark:text-gray-100">Affiliate program</h1>
+
+        {error && <div className="text-red-500 dark:text-red-400 p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg mb-4">{error}</div>}
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="stat"><span className="stat-label">Your code</span><span className="stat-value text-lg font-mono">{affiliate?.code || "Loading..."}</span></div>
@@ -35,12 +42,12 @@ export default function AffiliatePage() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="stat"><span className="stat-label">Clicks</span><span className="stat-value">{affiliate?.clickCount || 0}</span></div>
           <div className="stat"><span className="stat-label">Conversions</span><span className="stat-value">{affiliate?.conversionCount || 0}</span></div>
-          <div className="stat"><span className="stat-label">Conv. rate</span><span className="stat-value">{affiliate?.clickCount > 0 ? ((affiliate?.conversionCount / affiliate?.clickCount) * 100).toFixed(1) + "%" : "0%"}</span></div>
+          <div className="stat"><span className="stat-label">Conv. rate</span><span className="stat-value">{(affiliate?.clickCount ?? 0) > 0 ? (((affiliate?.conversionCount ?? 0) / (affiliate?.clickCount ?? 0)) * 100).toFixed(1) + "%" : "0%"}</span></div>
         </div>
 
         <div className="card mb-8">
           <h2 className="font-semibold mb-2">Your referral link</h2>
-          <p className="text-sm text-gray-500 mb-4">Share this link anywhere. When someone clicks and buys, you earn {((affiliate?.commission || 0.1) * 100).toFixed(0)}% commission.</p>
+          <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">Share this link anywhere. When someone clicks and buys, you earn {((affiliate?.commission || 0.1) * 100).toFixed(0)}% commission.</p>
           <div className="flex gap-2">
             <input readOnly value={refLink} className="input flex-1 font-mono text-sm" />
             <button onClick={() => { navigator.clipboard.writeText(refLink); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="btn-primary">
@@ -61,7 +68,7 @@ export default function AffiliatePage() {
                 <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold shrink-0">{s.step}</div>
                 <div>
                   <h3 className="font-medium">{s.title}</h3>
-                  <p className="text-sm text-gray-500">{s.desc}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{s.desc}</p>
                 </div>
               </div>
             ))}

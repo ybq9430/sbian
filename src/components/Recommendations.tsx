@@ -2,9 +2,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import type { ProductData } from "@/types/api";
+
+interface RecItem extends ProductData {
+  reason?: string;
+}
 
 export default function Recommendations({ productId }: { productId?: string }) {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<RecItem[]>([]);
 
   useEffect(() => {
     const url = productId ? `/api/recommendations?productId=${productId}` : "/api/recommendations";
@@ -17,7 +22,7 @@ export default function Recommendations({ productId }: { productId?: string }) {
     <div className="mt-12">
       <h2 className="text-xl font-bold mb-6">{productId ? "You might also like" : "Recommended for you"}</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {items.map((item: any) => (
+        {items.map((item) => (
           <Link key={item.id} href={`/products/${item.id}`} className="card hover:shadow-md transition-all group">
             <div className="aspect-square bg-gradient-to-br from-brand-50 to-blue-50 rounded-lg mb-3 flex items-center justify-center text-2xl">
               {item.coverImage ? <img src={item.coverImage} alt={item.title} className="w-full h-full object-cover rounded-lg" /> : "📦"}

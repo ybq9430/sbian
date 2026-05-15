@@ -3,32 +3,40 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
+import { errorMessage } from "@/types/api";
 
 export default function NewProductPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [form, setForm] = useState({ title: "", description: "", price: 0, category: "", coverImage: "", fileUrl: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (status === "unauthenticated") { router.push("/login"); return null; }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, status: "published" }),
-    });
-    if (res.ok) router.push("/dashboard");
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, status: "published" }),
+      });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      if (res.ok) router.push("/dashboard");
+    } catch (err: unknown) {
+      setError(errorMessage(err));
+    }
     setLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-8">Create new product</h1>
+        <h1 className="text-2xl font-bold mb-8 dark:text-gray-100">Create new product</h1>
+        {error && <div className="text-red-500 dark:text-red-400 p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg mb-4">{error}</div>}
         <form onSubmit={handleSubmit} className="card space-y-5">
           <div><label className="block text-sm font-medium mb-1">Title</label><input className="input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required /></div>
           <div><label className="block text-sm font-medium mb-1">Description</label><textarea className="input min-h-[120px]" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required /></div>

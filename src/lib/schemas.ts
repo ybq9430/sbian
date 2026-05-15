@@ -111,7 +111,7 @@ export const crmNoteSchema = z.object({
   userId: z.string().optional().default(""),
   note: z.string().optional().default(""),
   name: z.string().optional().default(""),
-  criteria: z.any().optional(),
+  criteria: z.unknown().optional(),
 });
 
 export const storefrontSchema = z.object({
@@ -130,4 +130,34 @@ export const aIDescribeSchema = z.object({
   title: z.string().min(1).max(200),
   category: z.string().min(1),
   keywords: z.string().optional(),
+});
+
+export const bundleSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().min(1).max(5000),
+  productIds: z.array(z.string().min(1)).min(1),
+  discount: z.number().min(0).max(1).optional(),
+});
+
+export const checkoutSchema = z.object({
+  productId: z.string().min(1),
+});
+
+export const searchSchema = z.object({
+  q: z.string().optional(),
+  category: z.string().optional(),
+  minPrice: z.string().optional(),
+  maxPrice: z.string().optional(),
+  sort: z.string().optional(),
+  rating: z.string().optional(),
+  tags: z.string().optional(),
+});
+
+export const notificationReadSchema = z.object({
+  id: z.string().optional(),
+});
+
+export const teamDeleteSchema = z.object({
+  productId: z.string().min(1),
+  userId: z.string().min(1),
 });

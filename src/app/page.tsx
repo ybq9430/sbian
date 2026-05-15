@@ -8,15 +8,15 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-blue-50 py-24 sm:py-32">
+        <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-blue-50 py-24 sm:py-32 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 mb-6">
+            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 mb-6 dark:text-gray-100">
               Build your{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-blue-600">
                 digital empire
               </span>
             </h1>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10">
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10 dark:text-gray-400">
               The all-in-one platform to create, market, and sell digital products.
               From ebooks to courses, templates to software — turn your knowledge into revenue.
             </p>
@@ -28,7 +28,7 @@ export default function Home() {
                 Browse products
               </Link>
             </div>
-            <div className="mt-12 flex items-center justify-center gap-8 text-sm text-gray-400">
+            <div className="mt-12 flex items-center justify-center gap-8 text-sm text-gray-400 dark:text-gray-500">
               <span className="flex items-center gap-2"><span className="w-2 h-2 bg-green-400 rounded-full" /> No upfront cost</span>
               <span className="flex items-center gap-2"><span className="w-2 h-2 bg-green-400 rounded-full" /> 10% platform fee</span>
               <span className="flex items-center gap-2"><span className="w-2 h-2 bg-green-400 rounded-full" /> Instant payouts</span>
@@ -37,11 +37,11 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="py-24 bg-white">
+        <section className="py-24 bg-white dark:bg-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Everything you need to sell</h2>
-              <p className="text-gray-500 max-w-xl mx-auto">From product creation to payment processing, analytics to customer management — we handle the heavy lifting.</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4 dark:text-gray-100">Everything you need to sell</h2>
+              <p className="text-gray-500 max-w-xl mx-auto dark:text-gray-400">From product creation to payment processing, analytics to customer management — we handle the heavy lifting.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               {[
@@ -55,7 +55,7 @@ export default function Home() {
                 <div key={i} className="card hover:shadow-md transition-shadow">
                   <div className="text-3xl mb-4">{f.icon}</div>
                   <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+                  <p className="text-sm text-gray-500 leading-relaxed dark:text-gray-400">{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -63,13 +63,13 @@ export default function Home() {
         </section>
 
         {/* Stats */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[{ v: "10,000+", l: "Creators" }, { v: "50,000+", l: "Products sold" }, { v: "¥12M+", l: "Earned by creators" }, { v: "98%", l: "Satisfaction rate" }].map((s, i) => (
                 <div key={i}>
-                  <div className="text-3xl font-bold text-brand-700 mb-1">{s.v}</div>
-                  <div className="text-sm text-gray-500">{s.l}</div>
+                  <div className="text-3xl font-bold text-brand-700 mb-1 dark:text-brand-400">{s.v}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{s.l}</div>
                 </div>
               ))}
             </div>
@@ -77,11 +77,11 @@ export default function Home() {
         </section>
 
         {/* Pricing */}
-        <section id="pricing" className="py-24 bg-white">
+        <section id="pricing" className="py-24 bg-white dark:bg-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, transparent pricing</h2>
-              <p className="text-gray-500 max-w-xl mx-auto">Start for free. Pay only when you make money.</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4 dark:text-gray-100">Simple, transparent pricing</h2>
+              <p className="text-gray-500 max-w-xl mx-auto dark:text-gray-400">Start for free. Pay only when you make money.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {[
@@ -93,10 +93,10 @@ export default function Home() {
                   {p.primary && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-xs px-3 py-1 rounded-full">Most popular</span>}
                   <h3 className="font-semibold text-lg mb-1">{p.name}</h3>
                   <div className="text-3xl font-bold mb-1">{p.price}</div>
-                  <div className="text-sm text-gray-500 mb-4">{p.fee} transaction fee</div>
+                  <div className="text-sm text-gray-500 mb-4 dark:text-gray-400">{p.fee} transaction fee</div>
                   <ul className="space-y-2 mb-6">
                     {p.features.map((f, j) => (
-                      <li key={j} className="text-sm text-gray-600 flex items-center gap-2">
+                      <li key={j} className="text-sm text-gray-600 flex items-center gap-2 dark:text-gray-400">
                         <span className="text-green-500 font-bold">+</span> {f}
                       </li>
                     ))}
@@ -115,7 +115,7 @@ export default function Home() {
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Ready to start selling?</h2>
             <p className="text-brand-100 mb-8">Join thousands of creators who turned their passion into profit. It takes less than 5 minutes to set up your first product.</p>
-            <Link href="/register" className="inline-flex items-center px-8 py-3 bg-white text-brand-700 font-semibold rounded-xl hover:bg-brand-50 transition-colors shadow-lg">
+            <Link href="/register" className="inline-flex items-center px-8 py-3 bg-white text-brand-700 font-semibold rounded-xl hover:bg-brand-50 transition-colors shadow-lg dark:bg-gray-800 dark:text-brand-400 dark:hover:bg-gray-700">
               Create your free account
             </Link>
           </div>

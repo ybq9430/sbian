@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { withErrorHandler, validateBody, ok, notFound, badRequest } from "@/lib/api-handler";
 import { requireAuth } from "@/lib/auth-helpers";
-import { teamSchema, deleteIdSchema } from "@/lib/schemas";
+import { teamSchema, teamDeleteSchema } from "@/lib/schemas";
 
 export const GET = withErrorHandler(async (req) => {
   const user = await requireAuth();
@@ -31,7 +31,7 @@ export const POST = withErrorHandler(async (req) => {
 
 export const DELETE = withErrorHandler(async (req) => {
   const user = await requireAuth();
-  const { productId, userId } = await req.json();
+  const { productId, userId } = validateBody(teamDeleteSchema, await req.json());
   await prisma.teamMember.deleteMany({ where: { productId, userId, product: { sellerId: user.id } } });
   return ok({ success: true });
 });

@@ -4,7 +4,7 @@ import { withErrorHandler, badRequest } from "@/lib/api-handler";
 import { requireAuth } from "@/lib/auth-helpers";
 export const dynamic = "force-dynamic";
 
-function toCSV(rows: Record<string, any>[]): string {
+function toCSV(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
   const headers = Object.keys(rows[0]);
   const lines = [headers.join(","), ...rows.map(r => headers.map(h => JSON.stringify(r[h] ?? "")).join(","))];

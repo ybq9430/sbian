@@ -11,7 +11,7 @@ export const POST = withErrorHandler(async (req) => {
   const product = await prisma.product.findFirst({ where: { id: productId, sellerId: user.id } });
   if (!product) return notFound("Product not found");
 
-  const boostFee = 29;
+  const boostFee = Number(process.env.BOOST_FEE) || 29;
   const wallet = await prisma.wallet.findUnique({ where: { userId: user.id } });
   if (!wallet || wallet.balance < boostFee)
     return badRequest(`Insufficient balance. Need ¥${boostFee}`);

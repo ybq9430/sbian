@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import { errorMessage } from "@/types/api";
 
 const categories = ["E-book", "Course", "Template", "Software", "Design", "Audio", "Video", "Other"];
 
@@ -10,20 +11,27 @@ export default function AIStudioPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [form, setForm] = useState({ title: "", category: "E-book", keywords: "" });
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{ descriptions: string[]; titleSuggestions: string[]; tags: string; tips: string[]; pricing: { min: number; recommended: number; max: number } } | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedDesc, setSelectedDesc] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("/api/ai/describe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
-    setResult(data);
+    setError(null);
+    try {
+      const res = await fetch("/api/ai/describe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      const data = await res.json();
+      setResult(data);
+    } catch (err: unknown) {
+      setError(errorMessage(err));
+    }
     setLoading(false);
   }
 
@@ -43,13 +51,15 @@ export default function AIStudioPage() {
   if (status === "unauthenticated") { router.push("/login"); return null; }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">AI Product Studio</h1>
-          <p className="text-gray-500 text-sm">Generate product descriptions, pricing recommendations, and tags using AI.</p>
+          <h1 className="text-2xl font-bold mb-2 dark:text-gray-100">AI Product Studio</h1>
+          <p className="text-gray-500 text-sm dark:text-gray-400">Generate product descriptions, pricing recommendations, and tags using AI.</p>
         </div>
+
+        {error && <div className="text-red-500 dark:text-red-400 p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg mb-4">{error}</div>}
 
         <div className="grid lg:grid-cols-2 gap-8">
           <div>
@@ -77,16 +87,16 @@ export default function AIStudioPage() {
               <div className="card mt-6">
                 <h3 className="font-semibold mb-3">Pricing recommendation</h3>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg flex-1">
-                    <p className="text-xs text-gray-500">Min</p>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg flex-1 dark:bg-gray-700">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Min</p>
                     <p className="font-bold">¥{result.pricing.min}</p>
                   </div>
-                  <div className="text-center p-3 bg-brand-50 rounded-lg flex-1 border border-brand-200">
-                    <p className="text-xs text-brand-600 font-medium">Recommended</p>
-                    <p className="font-bold text-brand-700">¥{result.pricing.recommended}</p>
+                  <div className="text-center p-3 bg-brand-50 rounded-lg flex-1 border border-brand-200 dark:bg-brand-900/30 dark:border-brand-700">
+                    <p className="text-xs text-brand-600 font-medium dark:text-brand-400">Recommended</p>
+                    <p className="font-bold text-brand-700 dark:text-brand-300">¥{result.pricing.recommended}</p>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg flex-1">
-                    <p className="text-xs text-gray-500">Max</p>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg flex-1 dark:bg-gray-700">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Max</p>
                     <p className="font-bold">¥{result.pricing.max}</p>
                   </div>
                 </div>
@@ -94,16 +104,16 @@ export default function AIStudioPage() {
                 <h3 className="font-semibold mb-3">Title alternatives</h3>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {result.titleSuggestions.map((t: string, i: number) => (
-                    <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded-full cursor-pointer hover:bg-brand-100" onClick={() => setForm({ ...form, title: t })}>
+                    <button key={i} type="button" className="text-xs bg-gray-100 px-2 py-1 rounded-full cursor-pointer hover:bg-brand-100 dark:bg-gray-700 dark:hover:bg-brand-900/30" onClick={() => setForm({ ...form, title: t })}>
                       {t}
-                    </span>
+                    </button>
                   ))}
                 </div>
 
                 <h3 className="font-semibold mb-3">Smart tips</h3>
                 <ul className="space-y-1.5 mb-4">
                   {result.tips.map((t: string, i: number) => (
-                    <li key={i} className="text-xs text-gray-600 flex items-start gap-2">
+                    <li key={i} className="text-xs text-gray-600 flex items-start gap-2 dark:text-gray-400">
                       <span className="text-brand-500 mt-0.5">✦</span> {t}
                     </li>
                   ))}
@@ -114,7 +124,7 @@ export default function AIStudioPage() {
                     <h3 className="font-semibold mb-2">Suggested tags</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {result.tags.split(", ").map((t: string, i: number) => (
-                        <span key={i} className="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded-full">{t}</span>
+                        <span key={i} className="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded-full dark:bg-brand-900/30 dark:text-brand-300">{t}</span>
                       ))}
                     </div>
                   </>
@@ -131,12 +141,12 @@ export default function AIStudioPage() {
                   <button onClick={handleUseResult} className="btn-primary text-sm !px-3 !py-1.5">Use selected →</button>
                 </div>
                 {result.descriptions.map((desc: string, i: number) => (
-                  <div key={i} onClick={() => setSelectedDesc(i)} className={`card cursor-pointer transition-all ${selectedDesc === i ? "ring-2 ring-brand-500 shadow-md" : "hover:shadow-md"}`}>
+                  <div key={i} onClick={() => setSelectedDesc(i)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedDesc(i); } }} aria-label={`Select description version ${i + 1}`} className={`card cursor-pointer transition-all ${selectedDesc === i ? "ring-2 ring-brand-500 shadow-md" : "hover:shadow-md"}`}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-brand-600">Version {i + 1}</span>
-                      {selectedDesc === i && <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full">Selected</span>}
+                      <span className="text-xs font-medium text-brand-600 dark:text-brand-400">Version {i + 1}</span>
+                      {selectedDesc === i && <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full dark:bg-brand-900/50 dark:text-brand-300">Selected</span>}
                     </div>
-                    <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">{desc}</div>
+                    <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed dark:text-gray-400">{desc}</div>
                   </div>
                 ))}
               </div>
@@ -144,7 +154,7 @@ export default function AIStudioPage() {
               <div className="card text-center py-16">
                 <div className="text-6xl mb-4">🤖</div>
                 <h3 className="font-semibold text-lg mb-2">AI Description Generator</h3>
-                <p className="text-sm text-gray-400 max-w-xs mx-auto">Fill in the form and hit generate. The AI will create optimized product descriptions, suggest pricing, and generate tags.</p>
+                <p className="text-sm text-gray-400 max-w-xs mx-auto dark:text-gray-500">Fill in the form and hit generate. The AI will create optimized product descriptions, suggest pricing, and generate tags.</p>
               </div>
             )}
           </div>

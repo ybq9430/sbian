@@ -11,14 +11,14 @@ export const GET = withErrorHandler(async (req) => {
 
   if (productId) {
     const buyersOfThis = await prisma.orderItem.findMany({ where: { productId }, select: { order: { select: { buyerId: true } } } });
-    const buyerIds = [...new Set(buyersOfThis.map(b => (b as any).order?.buyerId).filter(Boolean))];
+    const buyerIds = [...new Set(buyersOfThis.map(b => b.order?.buyerId).filter(Boolean))];
     if (buyerIds.length > 0) {
       const relatedItems = await prisma.orderItem.findMany({
         where: { order: { buyerId: { in: buyerIds } }, productId: { not: productId } },
         include: { product: { include: { seller: { select: { id: true, name: true } } } } },
         take: limit * 2,
       });
-      const scored = new Map<string, { product: any; count: number }>();
+      const scored = new Map<string, { product: typeof relatedItems[number]["product"]; count: number }>();
       relatedItems.forEach(item => { const e = scored.get(item.productId); if (e) e.count++; else scored.set(item.productId, { product: item.product, count: 1 }); });
       return ok([...scored.values()].sort((a, b) => b.count - a.count).slice(0, limit).map(s => ({ ...s.product, reason: `Also bought by ${s.count} customer(s)` })));
     }
@@ -30,7 +30,7 @@ export const GET = withErrorHandler(async (req) => {
   const user = await getSessionUser();
   if (user) {
     const userOrders = await prisma.orderItem.findMany({ where: { order: { buyerId: user.id } }, select: { product: { select: { category: true } } } });
-    const categories = [...new Set(userOrders.map(o => (o.product as any)?.category).filter(Boolean))];
+    const categories = [...new Set(userOrders.map(o => o.product?.category).filter(Boolean))];
     if (categories.length > 0) {
       const personalized = await prisma.product.findMany({ where: { category: { in: categories }, status: "published" }, include: { seller: { select: { id: true, name: true } } }, take: limit, orderBy: { salesCount: "desc" } });
       if (personalized.length > 0) return ok(personalized.map(p => ({ ...p, reason: "Based on your interests" })));

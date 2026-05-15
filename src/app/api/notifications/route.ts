@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { withErrorHandler, ok } from "@/lib/api-handler";
+import { withErrorHandler, validateBody, ok } from "@/lib/api-handler";
 import { requireAuth } from "@/lib/auth-helpers";
+import { notificationReadSchema } from "@/lib/schemas";
 
 export const GET = withErrorHandler(async () => {
   const user = await requireAuth();
@@ -15,7 +16,7 @@ export const GET = withErrorHandler(async () => {
 
 export const POST = withErrorHandler(async (req) => {
   const user = await requireAuth();
-  const { id } = await req.json();
+  const { id } = validateBody(notificationReadSchema, await req.json());
   if (id) {
     await prisma.notification.updateMany({ where: { id, userId: user.id }, data: { read: true } });
   } else {

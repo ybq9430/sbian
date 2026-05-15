@@ -5,29 +5,35 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { errorMessage, type AnalyticsData } from "@/types/api";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
     if (status === "authenticated") {
-      fetch("/api/analytics").then(r => r.json()).then(setData);
+      fetch("/api/analytics")
+        .then(r => { if (!r.ok) throw new Error(`Request failed: ${r.status}`); return r.json(); })
+        .then(setData)
+        .catch(err => setError(errorMessage(err)));
     }
   }, [status, router]);
 
-  if (!data) return <div className="min-h-screen bg-gray-50"><Navbar /><div className="max-w-7xl mx-auto p-8">Loading...</div></div>;
+  if (error) return <div className="min-h-screen bg-gray-50 dark:bg-gray-900"><Navbar /><div className="text-red-500 dark:text-red-400 p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg mb-4 max-w-7xl mx-auto mt-8">{error}</div></div>;
+  if (!data) return <div className="min-h-screen bg-gray-50 dark:bg-gray-900"><Navbar /><div className="max-w-7xl mx-auto p-8">Loading...</div></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 text-sm mt-1">Welcome back, {session?.user?.name}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+            <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">Welcome back, {session?.user?.name}</p>
           </div>
           <Link href="/products/new" className="btn-primary">New product</Link>
         </div>
@@ -61,7 +67,7 @@ export default function Dashboard() {
                 { href: "/orders", label: "View orders", icon: "📋" },
                 { href: "/analytics", label: "Analytics", icon: "📊" },
               ].map((a, i) => (
-                <Link key={i} href={a.href} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors">
+                <Link key={i} href={a.href} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-700">
                   <span className="text-lg">{a.icon}</span>
                   <span className="text-sm font-medium">{a.label}</span>
                 </Link>
@@ -72,16 +78,16 @@ export default function Dashboard() {
             <h3 className="font-semibold mb-4">Getting started</h3>
             <div className="space-y-3">
               {[
-                { step: 1, text: "Create your first product", done: data.myProducts > 0 },
+                { step: 1, text: "Create your first product", done: (data.myProducts ?? 0) > 0 },
                 { step: 2, text: "Set up your payment method", done: !!session },
-                { step: 3, text: "Share your product link", done: data.myProducts > 0 },
-                { step: 4, text: "Make your first sale", done: data.totalSales > 0 },
+                { step: 3, text: "Share your product link", done: (data.myProducts ?? 0) > 0 },
+                { step: 4, text: "Make your first sale", done: (data.totalSales ?? 0) > 0 },
               ].map((s) => (
                 <div key={s.step} className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${s.done ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${s.done ? "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-300" : "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"}`}>
                     {s.done ? "✓" : s.step}
                   </div>
-                  <span className={`text-sm ${s.done ? "text-gray-500 line-through" : "text-gray-700"}`}>{s.text}</span>
+                  <span className={`text-sm ${s.done ? "text-gray-500 line-through dark:text-gray-400" : "text-gray-700 dark:text-gray-300"}`}>{s.text}</span>
                 </div>
               ))}
             </div>

@@ -412,3 +412,16 @@ model CustomerNote {
   note      String
   createdAt DateTime @default(now())
 }
+
+model EmailLog {
+  id           String   @id @default(cuid())
+  sellerId     String
+  subject      String
+  content      String
+  productId    String?
+  recipientCount Int    @default(0)
+  recipients   String   @default("")
+  status       String   @default("queued")
+  sentAt       DateTime?
+  createdAt    DateTime @default(now())
+}

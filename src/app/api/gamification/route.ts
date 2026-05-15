@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { withErrorHandler, validateBody, ok } from "@/lib/api-handler";
+import { withErrorHandler, validateBody, ok, badRequest } from "@/lib/api-handler";
 import { requireAuth } from "@/lib/auth-helpers";
 import { gamificationSchema } from "@/lib/schemas";
 
@@ -24,7 +24,8 @@ export const POST = withErrorHandler(async (req) => {
   const user = await requireAuth();
   const { action } = validateBody(gamificationSchema, await req.json());
   const xpMap: Record<string, number> = { create_product: 50, make_sale: 30, write_review: 10, daily_login: 5, share_product: 15, refer_friend: 100, complete_profile: 25 };
-  const xp = xpMap[action] || 0;
+  if (!(action in xpMap)) return badRequest(`Unknown action: ${action}. Valid: ${Object.keys(xpMap).join(", ")}`);
+  const xp = xpMap[action];
   if (xp > 0) {
     const updated = await prisma.user.update({ where: { id: user.id }, data: { xp: { increment: xp } } });
     const newLevel = Math.floor(updated.xp / 500) + 1;

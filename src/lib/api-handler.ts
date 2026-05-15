@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
 import { ZodError, ZodSchema } from "zod";
 import { AuthError } from "./auth-helpers";
+import { rateLimitReq } from "./rate-limiter";
 
-type HandlerFn = (req: Request, params?: any) => Promise<NextResponse>;
+type RouteContext = { params: Record<string, string> };
+type HandlerFn = (req: Request, context: RouteContext) => Promise<NextResponse>;
 
 export function withErrorHandler(fn: HandlerFn): HandlerFn {
-  return async (req: Request, params?: any) => {
+  return async (req: Request, context: RouteContext) => {
+    const rl = rateLimitReq(req);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfter: Math.ceil((rl.resetAt - Date.now()) / 1000) },
+        { status: 429, headers: { "X-RateLimit-Remaining": "0", "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      );
+    }
+
     try {
-      return await fn(req, params);
+      const res = await fn(req, context);
+      res.headers.set("X-RateLimit-Remaining", String(rl.remaining));
+      return res;
     } catch (e) {
       if (e instanceof AuthError) {
         return NextResponse.json({ error: e.message }, { status: e.status });

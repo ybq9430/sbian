@@ -5,6 +5,13 @@ import { withErrorHandler, validateBody, ok, badRequest } from "@/lib/api-handle
 import { requireAuth } from "@/lib/auth-helpers";
 import { crmNoteSchema } from "@/lib/schemas";
 
+interface CustomerEntry {
+  customer: { id: string; name: string; email: string; createdAt: Date };
+  totalSpent: number;
+  orderCount: number;
+  lastOrder: Date;
+}
+
 export const GET = withErrorHandler(async () => {
   const user = await requireAuth();
   const [customers, segments, notes, totalRevenue] = await Promise.all([
@@ -14,7 +21,7 @@ export const GET = withErrorHandler(async () => {
     prisma.order.aggregate({ where: { items: { some: { product: { sellerId: user.id } } } }, _sum: { total: true } }),
   ]);
 
-  const customerMap = new Map<string, { customer: any; totalSpent: number; orderCount: number; lastOrder: Date }>();
+  const customerMap = new Map<string, CustomerEntry>();
   customers.forEach(o => {
     const c = o.buyer;
     const existing = customerMap.get(c.id);

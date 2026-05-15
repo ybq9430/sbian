@@ -2,10 +2,11 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { withErrorHandler, ok } from "@/lib/api-handler";
-import { requireAuth } from "@/lib/auth-helpers";
+import { requireAuth, getSessionUser, AuthError } from "@/lib/auth-helpers";
 
 export const GET = withErrorHandler(async () => {
-  const user = await requireAuth();
+  const user = await getSessionUser();
+  if (!user) throw new AuthError("Unauthorized");
 
   if (user.role === "admin") {
     const [totalUsers, totalProducts, totalOrders, totalRevenue, recentOrders] = await Promise.all([

@@ -15,7 +15,7 @@ export default function Footer() {
             <div key={i}>
               <h4 className="text-white font-semibold mb-4">{col.title}</h4>
               <ul className="space-y-2 text-sm">
-                {col.links.map((l, j) => <li key={j}>{l}</li>)}
+                {col.links.map((l, j) => <li key={j}><a href={l.toLowerCase().replace(/\s+/g, "-")} className="hover:text-white transition-colors">{l}</a></li>)}
               </ul>
             </div>
           ))}

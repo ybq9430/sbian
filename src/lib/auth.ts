@@ -60,5 +60,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: { signIn: "/login" },
-  secret: process.env.NEXTAUTH_SECRET || "dev-secret-change-in-production",
+  secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === "production" ? (() => { throw new Error("NEXTAUTH_SECRET must be set in production"); })() : "dev-secret-change-in-production"),
 };
